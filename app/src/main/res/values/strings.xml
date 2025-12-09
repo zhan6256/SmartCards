@@ -1,0 +1,15 @@
+<resources>
+    <string name="app_name">MyDemoApplication</string>
+    <string name="exercise">Exercise</string>
+    <string name="weight">Weight</string>
+    <string name="enter_a_weight">Enter a Weight</string>
+    <string name="enter_an_exercise">Enter an Exercise</string>
+    <string name="enter_reps">Enter Reps</string>
+    <string name="reps">Reps</string>
+    <string name="log">Log!</string>
+    <string name="nothing_to_show_time_to_hit_the_gym">Nothing to show, time to hit the gym!</string>
+    <string name="login_welcome">Welcome to the GymLog. \nPlease Sign in.</string>
+    <string name="username">Username</string>
+    <string name="password">Password</string>
+    <string name="login">Login</string>
+</resources>
