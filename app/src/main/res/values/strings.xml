@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">MyDemoApplication</string>
+    <string name="app_name">SmartCards</string>
     <string name="exercise">Exercise</string>
     <string name="weight">Weight</string>
     <string name="enter_a_weight">Enter a Weight</string>
