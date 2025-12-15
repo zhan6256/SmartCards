@@ -16,6 +16,7 @@ import com.daclink.mydemoapplication.Database.typeConverters.LocalDateTypeConver
 import com.daclink.mydemoapplication.MainActivity;
 import com.daclink.mydemoapplication.Database.entities.Course;
 
+
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 /*
@@ -34,24 +35,61 @@ public abstract class GymLogDatabase extends RoomDatabase {
     private static volatile GymLogDatabase INSTANCE;
     private static final int NUMBER_OF_THREADS = 4;
     static final ExecutorService databaseWriteExecutor = Executors.newFixedThreadPool(NUMBER_OF_THREADS);
-    static GymLogDatabase getDatabase(final Context context){
-        if(INSTANCE == null){
-            synchronized(GymLogDatabase.class){
-                if(INSTANCE == null){
+    static GymLogDatabase getDatabase(final Context context) {
+        if (INSTANCE == null) {
+            synchronized (GymLogDatabase.class) {
+                if (INSTANCE == null) {
                     INSTANCE = Room.databaseBuilder(
-                            context.getApplicationContext(),
-                            GymLogDatabase.class,
+                                    context.getApplicationContext(),
+                                    GymLogDatabase.class,
                                     DATABASE_NAME
                             )
                             .fallbackToDestructiveMigration()
                             .addCallback(addDefaultValues)
-                            .build();
+                            .addCallback(new RoomDatabase.Callback() {
+                                @Override
+                                public void onCreate(@NonNull SupportSQLiteDatabase db) {
+                                    super.onCreate(db);
 
+                                    databaseWriteExecutor.execute(() -> {
+                                        UserDAO userDAO = INSTANCE.userDAO();        // ✅ use your abstract method
+                                        CourseDAO courseDAO = INSTANCE.getCourseDAO();
+
+                                        User admin = userDAO.getUserByUsernameSync("admin1");
+                                        if (admin == null) {
+                                            User adminUser = new User("admin1", "admin1");
+                                            adminUser.setAdmin(true);
+                                            userDAO.insert(adminUser);
+                                            admin = userDAO.getUserByUsernameSync("admin1");
+                                        }
+
+                                        if (admin != null) {
+                                            courseDAO.insert(new Course(
+                                                    "Introduction to Programming",
+                                                    "Learn basic programming concepts and problem solving.",
+                                                    admin.getId()
+                                            ));
+                                            courseDAO.insert(new Course(
+                                                    "Operating Systems",
+                                                    "Processes, memory, scheduling, and file systems.",
+                                                    admin.getId()
+                                            ));
+                                            courseDAO.insert(new Course(
+                                                    "Data Structures & Algorithms",
+                                                    "Lists, trees, graphs, sorting, and algorithm analysis.",
+                                                    admin.getId()
+                                            ));
+                                        }
+                                    });
+                                }
+                            })
+                            .build();
                 }
             }
         }
         return INSTANCE;
     }
+
     private static final RoomDatabase.Callback addDefaultValues = new RoomDatabase.Callback() {
         @Override
         public void onCreate(@NonNull SupportSQLiteDatabase db) {

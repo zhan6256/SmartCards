@@ -8,6 +8,7 @@ import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
 
 import com.daclink.mydemoapplication.Database.entities.User;
+import com.daclink.mydemoapplication.Database.GymLogDatabase;
 
 import java.util.List;
 
@@ -35,4 +36,8 @@ public interface UserDAO {
 
     @Query("SELECT * from " + GymLogDatabase.USER_TABLE + " WHERE id == :userId")
     LiveData<User> getUserByUserId(int userId);
+
+    @Query("SELECT * FROM " + GymLogDatabase.USER_TABLE + " WHERE username = :username LIMIT 1")
+    User getUserByUsernameSync(String username);
+
 }
