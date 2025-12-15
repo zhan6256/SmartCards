@@ -14,6 +14,7 @@ import com.daclink.mydemoapplication.Database.entities.GymLog;
 import com.daclink.mydemoapplication.Database.entities.User;
 import com.daclink.mydemoapplication.Database.typeConverters.LocalDateTypeConverter;
 import com.daclink.mydemoapplication.MainActivity;
+import com.daclink.mydemoapplication.Database.entities.Course;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -23,7 +24,7 @@ import java.util.concurrent.Executors;
  * Description: GymLogDatabase class
  */
 @TypeConverters(LocalDateTypeConverter.class)
-@Database(entities = {GymLog.class, User.class}, version = 3, exportSchema = false)
+@Database(entities = {GymLog.class, User.class, Course.class}, version = 4, exportSchema = false)
 public abstract class GymLogDatabase extends RoomDatabase {
     public static final String USER_TABLE = "usertable";
     private static final String DATABASE_NAME = "GymLogdatabase";
@@ -70,4 +71,6 @@ public abstract class GymLogDatabase extends RoomDatabase {
 
     public abstract GymLogDAO gymLogDAO();
     public abstract UserDAO userDAO();
+    public abstract CourseDAO getCourseDAO();
+
 }
