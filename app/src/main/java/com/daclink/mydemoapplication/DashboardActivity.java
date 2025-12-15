@@ -25,9 +25,8 @@ import java.util.List;
 
 /*
  * Author: France Zhang
- * Description: DashboardActivity (no toolbar menu)
+ * Description: DashboardActivity (course buttons open Flashcards)
  */
-
 public class DashboardActivity extends AppCompatActivity {
 
     public static final String DASHBOARD_USER_ID =
@@ -81,11 +80,7 @@ public class DashboardActivity extends AppCompatActivity {
 
             // Admin-only controls (per your spec: admin1 is admin)
             boolean isAdmin = "admin1".equalsIgnoreCase(user.getUsername());
-            if (!isAdmin) {
-                adminControlsGroup.setVisibility(View.GONE);
-            } else {
-                adminControlsGroup.setVisibility(View.VISIBLE);
-            }
+            adminControlsGroup.setVisibility(isAdmin ? View.VISIBLE : View.GONE);
         });
 
         // Load courses
@@ -94,7 +89,7 @@ public class DashboardActivity extends AppCompatActivity {
         // Edit course
         editCourseButton.setOnClickListener(v -> {
             if (selectedCourse == null) {
-                Toast.makeText(this, "Select a course first", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Long-press a course to select it first", Toast.LENGTH_SHORT).show();
                 return;
             }
             showEditCourseDialog(selectedCourse);
@@ -103,7 +98,7 @@ public class DashboardActivity extends AppCompatActivity {
         // Delete course
         deleteCourseButton.setOnClickListener(v -> {
             if (selectedCourse == null) {
-                Toast.makeText(this, "Select a course first", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Long-press a course to select it first", Toast.LENGTH_SHORT).show();
                 return;
             }
             confirmDeleteCourse(selectedCourse);
@@ -128,13 +123,25 @@ public class DashboardActivity extends AppCompatActivity {
                     courseButton.setText(course.getCourseName());
                     courseButton.setAllCaps(false);
 
+                    // Tap = open Flashcards screen for that course
                     courseButton.setOnClickListener(v -> {
+                        startActivity(
+                                FlashcardsActivity.flashcardsIntentFactory(
+                                        DashboardActivity.this,
+                                        course.getCourseName()
+                                )
+                        );
+                    });
+
+                    // Long-press = select course for Edit/Delete buttons
+                    courseButton.setOnLongClickListener(v -> {
                         selectedCourse = course;
                         Toast.makeText(
-                                this,
+                                DashboardActivity.this,
                                 "Selected: " + course.getCourseName(),
                                 Toast.LENGTH_SHORT
                         ).show();
+                        return true; // consume long-press
                     });
 
                     courseContainer.addView(courseButton);
