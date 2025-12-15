@@ -1,8 +1,10 @@
 package com.daclink.mydemoapplication.Database;
 
 import androidx.room.Dao;
+import androidx.room.Delete;
 import androidx.room.Insert;
 import androidx.room.Query;
+import androidx.room.Update;
 
 import com.daclink.mydemoapplication.Database.entities.Course;
 
@@ -19,6 +21,18 @@ public interface CourseDAO {
 
     @Query("SELECT * FROM course WHERE createdByUserId = :userId")
     List<Course> getCoursesForUser(int userId);
+
+    // ✅ NEW: update a course (for Edit)
+    @Update
+    void update(Course course);
+
+    // ✅ NEW: delete a single course (for Delete)
+    @Delete
+    void delete(Course course);
+
+    // (Optional alternative if you prefer query instead of @Delete)
+    // @Query("DELETE FROM course WHERE courseId = :courseId")
+    // void deleteCourseById(int courseId);
 
     @Query("DELETE FROM course")
     void deleteAll();
