@@ -21,6 +21,15 @@ import com.daclink.mydemoapplication.Database.GymLogRepository;
 import com.daclink.mydemoapplication.Database.entities.GymLog;
 import com.daclink.mydemoapplication.Database.entities.User;
 import com.daclink.mydemoapplication.databinding.ActivityMainBinding;
+import com.daclink.mydemoapplication.Database.CourseDAO;
+import com.daclink.mydemoapplication.Database.entities.Course;
+
+import android.widget.TextView;
+import com.daclink.mydemoapplication.Database.GymLogDatabase;
+import com.daclink.mydemoapplication.Database.CourseDAO;
+import com.daclink.mydemoapplication.Database.entities.Course;
+import java.util.List;
+
 
 import java.util.ArrayList;
 
@@ -59,35 +68,61 @@ public class MainActivity extends AppCompatActivity {
     private int loggedInUserId = LOGGED_OUT;
     private User user;
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // ViewBinding (keep this)
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
-        // IMPORTANT FIX: Repository must be created BEFORE loginUser()
+        // If you have the TextView in activity_main.xml
+        // <TextView android:id="@+id/courseTestTextView" .../>
+        TextView courseTextView = findViewById(R.id.courseTestTextView);
+        // (Optional) If you prefer binding:
+        // TextView courseTextView = binding.courseTestTextView;
+
+        // IMPORTANT: Repository must be created BEFORE loginUser()
         repository = GymLogRepository.getRepository(getApplication());
 
         // Determine who is logged in
         loginUser(savedInstanceState);
 
-        // If still not logged in, go to LoginActivity
+        // If still not logged in, go to LoginActivity and stop this onCreate flow
         if (loggedInUserId == LOGGED_OUT) {
             startActivity(LoginActivity.loginIntentFactory(getApplicationContext()));
+            finish();
+            return;
         }
 
+        // --- QUICK TEST: read courses off main thread, log + display ---
+        GymLogDatabase db = GymLogDatabase.getDatabase(this);
+        CourseDAO courseDAO = db.getCourseDAO();
+
+        GymLogDatabase.databaseWriteExecutor.execute(() -> {
+            List<Course> courses = courseDAO.getAllCourses();
+
+            StringBuilder sb = new StringBuilder();
+            for (Course c : courses) {
+                Log.d(TAG, "COURSE: " + c.getCourseName());
+                sb.append(c.getCourseName()).append("\n");
+            }
+
+            runOnUiThread(() -> courseTextView.setText(sb.toString()));
+        });
+
+        // Existing GymLog UI behavior (keep)
         binding.logDisplayTextView.setMovementMethod(new ScrollingMovementMethod());
         updateDisplay();
 
-        binding.logButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                getInformationFromDisplay();
-                insertGymLogRecord();
-                updateDisplay();
-            }
+        binding.logButton.setOnClickListener(v -> {
+            getInformationFromDisplay();
+            insertGymLogRecord();
+            updateDisplay();
         });
     }
+
 
     /**
      * Matches the professor’s logic:

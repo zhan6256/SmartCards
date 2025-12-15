@@ -34,8 +34,8 @@ public abstract class GymLogDatabase extends RoomDatabase {
 
     private static volatile GymLogDatabase INSTANCE;
     private static final int NUMBER_OF_THREADS = 4;
-    static final ExecutorService databaseWriteExecutor = Executors.newFixedThreadPool(NUMBER_OF_THREADS);
-    static GymLogDatabase getDatabase(final Context context) {
+    public static final ExecutorService databaseWriteExecutor = Executors.newFixedThreadPool(NUMBER_OF_THREADS);
+    public static GymLogDatabase getDatabase(final Context context) {
         if (INSTANCE == null) {
             synchronized (GymLogDatabase.class) {
                 if (INSTANCE == null) {
