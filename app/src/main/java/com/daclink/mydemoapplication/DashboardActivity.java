@@ -50,7 +50,7 @@ public class DashboardActivity extends AppCompatActivity {
 
     private Course selectedCourse = null;
 
-    private User currentUser = null; // ✅ used for menu title (admin1, testuser1)
+    private User currentUser = null; // used for menu title (admin1, testuser1)
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -88,28 +88,29 @@ public class DashboardActivity extends AppCompatActivity {
                 return;
             }
 
-            currentUser = user; // ✅ save for menu title
+            currentUser = user; // save for menu title
             usernameTextView.setText("Username: " + user.getUsername());
 
-            // ✅ Admin-only controls
+            // Admin-only controls
             boolean isAdmin = user.isAdmin();
             adminControlsGroup.setVisibility(isAdmin ? View.VISIBLE : View.GONE);
 
             userListButton.setEnabled(isAdmin);
             addUserButton.setEnabled(isAdmin);
 
-            // ✅ refresh the 3-dots menu title
+            // refresh the 3-dots menu title
             invalidateOptionsMenu();
         });
 
-        // ✅ Wire admin buttons
+        // Wire admin buttons
         addUserButton.setOnClickListener(v ->
                 startActivity(AddUserActivity.addUserIntentFactory(this))
         );
 
-        // userListButton.setOnClickListener(v ->
-        //         startActivity(UserListActivity.userListIntentFactory(this))
-        // );
+        userListButton.setOnClickListener(v ->
+                startActivity(UserListActivity.userListIntentFactory(this, loggedInUserId))
+        );
+
 
         // ----- Load courses -----
         loadCourses();
@@ -134,6 +135,7 @@ public class DashboardActivity extends AppCompatActivity {
 
         // ----- Logout Button (keep for now) -----
         logoutButton.setOnClickListener(v -> logout());
+
     }
 
     // =========================================================
@@ -206,7 +208,7 @@ public class DashboardActivity extends AppCompatActivity {
                         return true;
                     });
 
-                    // ✅ Tap → Flashcards (pass courseId + name)
+                    // Tap → Flashcards (pass courseId + name)
                     courseButton.setOnClickListener(v -> {
                         Intent intent = FlashcardsActivity.flashcardsIntentFactory(
                                 this,

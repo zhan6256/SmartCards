@@ -40,4 +40,7 @@ public interface UserDAO {
     @Query("SELECT * FROM " + GymLogDatabase.USER_TABLE + " WHERE username = :username LIMIT 1")
     User getUserByUsernameSync(String username);
 
+    @Query("SELECT * FROM usertable ORDER BY username")
+    LiveData<List<User>> getAllUsers();
+
 }

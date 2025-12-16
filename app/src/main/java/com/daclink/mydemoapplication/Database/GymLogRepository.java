@@ -13,6 +13,8 @@ import java.util.ArrayList;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.List;
+
 
 /*
  * Author: France Zhang
@@ -23,6 +25,10 @@ import java.util.concurrent.Future;
 public class GymLogRepository {
     private final GymLogDAO gymLogDAO;
     private final UserDAO userDAO;
+    private final GymLogDAO mGymLogDAO;
+    private final UserDAO mUserDAO;        // MUST exist
+    private final CourseDAO mCourseDAO;
+    private final FlashcardDAO mFlashcardDAO;
     private ArrayList<GymLog> allLogs;
 
     private static GymLogRepository repository;
@@ -32,6 +38,10 @@ public class GymLogRepository {
         this.gymLogDAO = db.gymLogDAO();
         this.userDAO = db.userDAO();
         this.allLogs = (ArrayList<GymLog>) this.gymLogDAO.getAllRecords();
+        mGymLogDAO = db.gymLogDAO();
+        mUserDAO = db.userDAO();               // REQUIRED
+        mCourseDAO = db.getCourseDAO();
+        mFlashcardDAO = db.flashcardDAO();
     }
 
     public static GymLogRepository getRepository(Application application){
@@ -91,4 +101,12 @@ public class GymLogRepository {
 
         return userDAO.getUserByUserId(userId);
     }
+    public LiveData<List<User>> getAllUsers() {
+        return mUserDAO.getAllUsers();
+    }
+
+    public void deleteUser(User user) {
+        GymLogDatabase.databaseWriteExecutor.execute(() -> mUserDAO.delete(user));
+    }
+
 }
