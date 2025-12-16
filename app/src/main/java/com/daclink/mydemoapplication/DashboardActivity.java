@@ -4,9 +4,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -25,7 +26,7 @@ import java.util.List;
 
 /*
  * Author: France Zhang
- * Description: DashboardActivity (course buttons open Flashcards)
+ * Description: DashboardActivity
  */
 public class DashboardActivity extends AppCompatActivity {
 
@@ -39,18 +40,24 @@ public class DashboardActivity extends AppCompatActivity {
     private LinearLayout courseContainer;
     private LinearLayout adminControlsGroup;
 
+    // Admin controls
+    private Button userListButton;
+    private Button addUserButton;
+
     private Button editCourseButton;
     private Button deleteCourseButton;
     private Button logoutButton;
 
     private Course selectedCourse = null;
 
+    private User currentUser = null; // ✅ used for menu title (admin1, testuser1)
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_dashboard);
 
-        // Get user id
+        // ----- Get logged-in user ID -----
         loggedInUserId = getIntent().getIntExtra(DASHBOARD_USER_ID, -1);
         if (loggedInUserId == -1) {
             startActivity(LoginActivity.loginIntentFactory(this));
@@ -58,17 +65,22 @@ public class DashboardActivity extends AppCompatActivity {
             return;
         }
 
-        // Views
+        // ----- Views -----
         usernameTextView = findViewById(R.id.usernameTextView);
         courseContainer = findViewById(R.id.courseContainer);
         adminControlsGroup = findViewById(R.id.adminControlsGroup);
+
+        // Admin buttons (must exist in your XML)
+        userListButton = findViewById(R.id.userListButton);
+        addUserButton = findViewById(R.id.addUserButton);
+
         editCourseButton = findViewById(R.id.editCourseButton);
         deleteCourseButton = findViewById(R.id.deleteCourseButton);
         logoutButton = findViewById(R.id.logoutButton);
 
         repository = GymLogRepository.getRepository(getApplication());
 
-        // Load user
+        // ----- Load User -----
         LiveData<User> userObserver = repository.getUserByUserId(loggedInUserId);
         userObserver.observe(this, user -> {
             if (user == null) {
@@ -76,38 +88,98 @@ public class DashboardActivity extends AppCompatActivity {
                 return;
             }
 
+            currentUser = user; // ✅ save for menu title
             usernameTextView.setText("Username: " + user.getUsername());
 
-            // Admin-only controls (per your spec: admin1 is admin)
-            boolean isAdmin = "admin1".equalsIgnoreCase(user.getUsername());
+            // ✅ Admin-only controls
+            boolean isAdmin = user.isAdmin();
             adminControlsGroup.setVisibility(isAdmin ? View.VISIBLE : View.GONE);
+
+            userListButton.setEnabled(isAdmin);
+            addUserButton.setEnabled(isAdmin);
+
+            // ✅ refresh the 3-dots menu title
+            invalidateOptionsMenu();
         });
 
-        // Load courses
+        // ✅ Wire admin buttons
+        addUserButton.setOnClickListener(v ->
+                startActivity(AddUserActivity.addUserIntentFactory(this))
+        );
+
+        // userListButton.setOnClickListener(v ->
+        //         startActivity(UserListActivity.userListIntentFactory(this))
+        // );
+
+        // ----- Load courses -----
         loadCourses();
 
-        // Edit course
+        // ----- Edit Course -----
         editCourseButton.setOnClickListener(v -> {
             if (selectedCourse == null) {
-                Toast.makeText(this, "Long-press a course to select it first", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Select a course first (long-press)", Toast.LENGTH_SHORT).show();
                 return;
             }
             showEditCourseDialog(selectedCourse);
         });
 
-        // Delete course
+        // ----- Delete Course -----
         deleteCourseButton.setOnClickListener(v -> {
             if (selectedCourse == null) {
-                Toast.makeText(this, "Long-press a course to select it first", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Select a course first (long-press)", Toast.LENGTH_SHORT).show();
                 return;
             }
             confirmDeleteCourse(selectedCourse);
         });
 
-        // Logout
+        // ----- Logout Button (keep for now) -----
         logoutButton.setOnClickListener(v -> logout());
     }
 
+    // =========================================================
+    // 3-dots menu (Logout for everyone)
+    // =========================================================
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.logout_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        MenuItem item = menu.findItem(R.id.logoutMenuItem);
+
+        // If user not loaded yet, just show "Logout"
+        if (currentUser == null) {
+            item.setTitle("Logout");
+            return true;
+        }
+
+        // Show username like GymLog (tap it -> logout dialog)
+        item.setTitle(currentUser.getUsername());
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == R.id.logoutMenuItem) {
+            showLogoutDialog();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    private void showLogoutDialog() {
+        new AlertDialog.Builder(this)
+                .setMessage("Logout?")
+                .setPositiveButton("Logout", (dialog, which) -> logout())
+                .setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss())
+                .show();
+    }
+
+    // =========================================================
+    // Load courses and create buttons
+    // =========================================================
     private void loadCourses() {
         GymLogDatabase.databaseWriteExecutor.execute(() -> {
             GymLogDatabase db = GymLogDatabase.getDatabase(this);
@@ -123,25 +195,25 @@ public class DashboardActivity extends AppCompatActivity {
                     courseButton.setText(course.getCourseName());
                     courseButton.setAllCaps(false);
 
-                    // Tap = open Flashcards screen for that course
-                    courseButton.setOnClickListener(v -> {
-                        startActivity(
-                                FlashcardsActivity.flashcardsIntentFactory(
-                                        DashboardActivity.this,
-                                        course.getCourseName()
-                                )
-                        );
-                    });
-
-                    // Long-press = select course for Edit/Delete buttons
+                    // Select course (long press)
                     courseButton.setOnLongClickListener(v -> {
                         selectedCourse = course;
                         Toast.makeText(
-                                DashboardActivity.this,
+                                this,
                                 "Selected: " + course.getCourseName(),
                                 Toast.LENGTH_SHORT
                         ).show();
-                        return true; // consume long-press
+                        return true;
+                    });
+
+                    // ✅ Tap → Flashcards (pass courseId + name)
+                    courseButton.setOnClickListener(v -> {
+                        Intent intent = FlashcardsActivity.flashcardsIntentFactory(
+                                this,
+                                course.getCourseId(),
+                                course.getCourseName()
+                        );
+                        startActivity(intent);
                     });
 
                     courseContainer.addView(courseButton);
@@ -150,11 +222,14 @@ public class DashboardActivity extends AppCompatActivity {
         });
     }
 
+    // =========================================================
+    // Edit course dialog
+    // =========================================================
     private void showEditCourseDialog(Course course) {
         View dialogView = getLayoutInflater().inflate(R.layout.dialog_edit_course, null);
 
-        EditText nameEditText = dialogView.findViewById(R.id.editCourseName);
-        EditText descEditText = dialogView.findViewById(R.id.editCourseDescription);
+        TextView nameEditText = dialogView.findViewById(R.id.editCourseName);
+        TextView descEditText = dialogView.findViewById(R.id.editCourseDescription);
 
         nameEditText.setText(course.getCourseName());
         descEditText.setText(course.getCourseDescription());
@@ -177,7 +252,6 @@ public class DashboardActivity extends AppCompatActivity {
 
                         course.setCourseName(newName);
                         course.setCourseDescription(newDesc);
-
                         dao.update(course);
 
                         runOnUiThread(this::loadCourses);
@@ -187,6 +261,9 @@ public class DashboardActivity extends AppCompatActivity {
                 .show();
     }
 
+    // =========================================================
+    // Delete course confirmation
+    // =========================================================
     private void confirmDeleteCourse(Course course) {
         new AlertDialog.Builder(this)
                 .setTitle("Delete Course")
@@ -195,9 +272,7 @@ public class DashboardActivity extends AppCompatActivity {
                     GymLogDatabase.databaseWriteExecutor.execute(() -> {
                         GymLogDatabase db = GymLogDatabase.getDatabase(this);
                         CourseDAO dao = db.getCourseDAO();
-
                         dao.delete(course);
-
                         runOnUiThread(this::loadCourses);
                     });
                 })
@@ -205,6 +280,9 @@ public class DashboardActivity extends AppCompatActivity {
                 .show();
     }
 
+    // =========================================================
+    // Logout
+    // =========================================================
     private void logout() {
         SharedPreferences sharedPreferences =
                 getSharedPreferences(
@@ -220,6 +298,9 @@ public class DashboardActivity extends AppCompatActivity {
         finish();
     }
 
+    // =========================================================
+    // Intent factory
+    // =========================================================
     public static Intent dashboardIntentFactory(Context context, int userId) {
         Intent intent = new Intent(context, DashboardActivity.class);
         intent.putExtra(DASHBOARD_USER_ID, userId);

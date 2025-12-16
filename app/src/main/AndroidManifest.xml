@@ -15,6 +15,9 @@
             android:name=".DashboardActivity"
             android:exported="false" />
         <activity
+            android:name=".AddUserActivity"
+            android:exported="false" />
+        <activity
             android:name=".FlashcardsActivity"
             android:exported="false" />
         <activity

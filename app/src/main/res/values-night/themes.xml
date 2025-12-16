@@ -1,9 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
-
-    <!-- App theme (night) -->
-    <style name="Theme.SmartCards" parent="Theme.MaterialComponents.DayNight.NoActionBar">
-        <!-- optional -->
+    <style name="Theme.SmartCards" parent="Theme.MaterialComponents.DayNight.DarkActionBar">
     </style>
-
 </resources>
