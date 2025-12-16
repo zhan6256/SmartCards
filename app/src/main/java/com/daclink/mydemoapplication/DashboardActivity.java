@@ -37,7 +37,8 @@ public class DashboardActivity extends AppCompatActivity {
     private int loggedInUserId;
 
     private TextView usernameTextView;
-    private LinearLayout courseContainer;
+    private TextView adminControlsLabelTextView;
+        private LinearLayout courseContainer;
     private LinearLayout adminControlsGroup;
 
     // Admin controls
@@ -69,7 +70,7 @@ public class DashboardActivity extends AppCompatActivity {
         usernameTextView = findViewById(R.id.usernameTextView);
         courseContainer = findViewById(R.id.courseContainer);
         adminControlsGroup = findViewById(R.id.adminControlsGroup);
-
+        adminControlsLabelTextView = findViewById(R.id.adminControlsLabelTextView);
         // Admin buttons (must exist in your XML)
         userListButton = findViewById(R.id.userListButton);
         addUserButton = findViewById(R.id.addUserButton);
@@ -94,6 +95,7 @@ public class DashboardActivity extends AppCompatActivity {
             // Admin-only controls
             boolean isAdmin = user.isAdmin();
             adminControlsGroup.setVisibility(isAdmin ? View.VISIBLE : View.GONE);
+            adminControlsLabelTextView.setVisibility(isAdmin ? View.VISIBLE : View.GONE);
 
             userListButton.setEnabled(isAdmin);
             addUserButton.setEnabled(isAdmin);
