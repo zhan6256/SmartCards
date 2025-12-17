@@ -3,7 +3,6 @@ package com.daclink.mydemoapplication;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.MenuItem;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -24,6 +23,21 @@ public class FlashcardsActivity extends AppCompatActivity {
     private static final String EXTRA_COURSE_NAME =
             "com.daclink.mydemoapplication.EXTRA_COURSE_NAME";
 
+    private int courseId = -1;
+    private String courseName = "";
+
+    private TextView titleTextView;
+    private TextView positionTextView;
+    private TextView cardTextView;
+
+    private Button addCardButton;
+    private Button leftArrowButton;
+    private Button rightArrowButton;
+
+    private final List<Flashcard> cards = new ArrayList<>();
+    private int currentIndex = 0;
+    private boolean showingQuestion = true;
+
     public static Intent flashcardsIntentFactory(Context context, int courseId, String courseName) {
         Intent intent = new Intent(context, FlashcardsActivity.class);
         intent.putExtra(EXTRA_COURSE_ID, courseId);
@@ -31,128 +45,123 @@ public class FlashcardsActivity extends AppCompatActivity {
         return intent;
     }
 
-    private int courseId = -1;
-    private String courseName = "";
-
-    private TextView titleTextView;
-    private TextView cardTextView;
-    private TextView positionTextView;
-    private Button leftArrowButton;
-    private Button rightArrowButton;
-    private Button addCardButton;
-
-    private final ArrayList<Flashcard> flashcards = new ArrayList<>();
-    private int index = 0;
-    private boolean showingQuestion = true;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_flashcards);
 
-        // Show the back arrow in the top-left
+        // Back arrow
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         }
 
         courseId = getIntent().getIntExtra(EXTRA_COURSE_ID, -1);
         courseName = getIntent().getStringExtra(EXTRA_COURSE_NAME);
+        if (courseName == null) courseName = "";
 
-        if (courseId == -1) {
-            Toast.makeText(this, "Missing courseId.", Toast.LENGTH_SHORT).show();
-            finish();
-            return;
-        }
+        // Optional: quick debug toast (remove later)
+        // Toast.makeText(this, "Flashcards courseId=" + courseId, Toast.LENGTH_LONG).show();
 
-        // Views (IDs must exist in activity_flashcards.xml)
+        // These IDs MUST match your activity_flashcards.xml
         titleTextView = findViewById(R.id.flashcardsTitleTextView);
-        cardTextView = findViewById(R.id.cardTextView);
         positionTextView = findViewById(R.id.positionTextView);
+        cardTextView = findViewById(R.id.cardTextView);
+
+        addCardButton = findViewById(R.id.addCardButton);
         leftArrowButton = findViewById(R.id.leftArrowButton);
         rightArrowButton = findViewById(R.id.rightArrowButton);
-        addCardButton = findViewById(R.id.addCardButton);
 
         titleTextView.setText("Flashcards for: " + courseName);
 
-        // Tap card to flip
+        // Tap card to flip Q <-> A
         cardTextView.setOnClickListener(v -> {
-            if (flashcards.isEmpty()) return;
+            if (cards.isEmpty()) return;
             showingQuestion = !showingQuestion;
-            render();
+            updateCardDisplay();
         });
 
-        // Left / Right navigation
+        // Navigate left
         leftArrowButton.setOnClickListener(v -> {
-            if (flashcards.isEmpty()) return;
-            index = (index - 1 + flashcards.size()) % flashcards.size();
+            if (cards.isEmpty()) return;
+            currentIndex = (currentIndex - 1 + cards.size()) % cards.size();
             showingQuestion = true;
-            render();
+            updateCardDisplay();
         });
 
+        // Navigate right
         rightArrowButton.setOnClickListener(v -> {
-            if (flashcards.isEmpty()) return;
-            index = (index + 1) % flashcards.size();
+            if (cards.isEmpty()) return;
+            currentIndex = (currentIndex + 1) % cards.size();
             showingQuestion = true;
-            render();
+            updateCardDisplay();
         });
 
-        // Add card
-        addCardButton.setOnClickListener(v ->
-                startActivity(AddFlashcardActivity.addFlashcardIntentFactory(this, courseId))
-        );
-
-        loadFlashcards();
+        // Add card for this course
+        addCardButton.setOnClickListener(v -> {
+            if (courseId == -1) {
+                Toast.makeText(this,
+                        "Course not loaded. Go back and re-select the course.",
+                        Toast.LENGTH_SHORT).show();
+                return;
+            }
+            startActivity(AddFlashcardActivity.addFlashcardIntentFactory(this, courseId));
+        });
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        // refresh after returning from AddFlashcardActivity
         loadFlashcards();
     }
 
     private void loadFlashcards() {
+        if (courseId == -1) {
+            cardTextView.setText("Invalid course.");
+            positionTextView.setText("");
+            return;
+        }
+
         GymLogDatabase.databaseWriteExecutor.execute(() -> {
             GymLogDatabase db = GymLogDatabase.getDatabase(this);
             FlashcardDAO dao = db.flashcardDAO();
-
-            List<Flashcard> result = dao.getFlashcardsForCourse(courseId);
+            List<Flashcard> results = dao.getFlashcardsForCourse(courseId);
 
             runOnUiThread(() -> {
-                flashcards.clear();
-                if (result != null) flashcards.addAll(result);
+                cards.clear();
+                if (results != null) cards.addAll(results);
 
-                if (flashcards.isEmpty()) {
-                    cardTextView.setText("(No flashcards yet. Tap Add Card.)");
-                    positionTextView.setText("");
-                    leftArrowButton.setEnabled(false);
-                    rightArrowButton.setEnabled(false);
-                } else {
-                    leftArrowButton.setEnabled(true);
-                    rightArrowButton.setEnabled(true);
-                    index = 0;
-                    showingQuestion = true;
-                    render();
-                }
+                currentIndex = 0;
+                showingQuestion = true;
+                updateCardDisplay();
             });
         });
     }
 
-    private void render() {
-        Flashcard current = flashcards.get(index);
+    private void updateCardDisplay() {
+        if (cards.isEmpty()) {
+            cardTextView.setText("No flashcards yet.\nTap Add Card to create one.");
+            positionTextView.setText("");
+            leftArrowButton.setEnabled(false);
+            rightArrowButton.setEnabled(false);
+            return;
+        }
 
-        // Change these getters if your entity uses different names
-        String front = current.getQuestion();
-        String back = current.getAnswer();
+        leftArrowButton.setEnabled(true);
+        rightArrowButton.setEnabled(true);
 
-        cardTextView.setText(showingQuestion ? front : back);
-        positionTextView.setText((index + 1) + " / " + flashcards.size());
+        Flashcard current = cards.get(currentIndex);
+
+        String text = showingQuestion ? current.getQuestion() : current.getAnswer();
+        String prefix = showingQuestion ? "Q: " : "A: ";
+
+        cardTextView.setText(prefix + (text == null ? "" : text));
+        positionTextView.setText((currentIndex + 1) + " / " + cards.size() + "   (Tap to flip)");
     }
 
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
+    public boolean onOptionsItemSelected(android.view.MenuItem item) {
         if (item.getItemId() == android.R.id.home) {
-            finish(); // go back to DashboardActivity
+            finish();
             return true;
         }
         return super.onOptionsItemSelected(item);

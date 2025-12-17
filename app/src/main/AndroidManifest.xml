@@ -22,6 +22,9 @@
             android:name=".FlashcardsActivity"
             android:exported="false" />
         <activity
+            android:name=".AddFlashcardActivity"
+            android:exported="false" />
+        <activity
             android:name=".LoginActivity"
             android:exported="false" />
         <activity
