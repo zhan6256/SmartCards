@@ -37,6 +37,14 @@
         android:text="Add Card"
         android:layout_marginTop="8dp" />
 
+    <!-- Delete Card button (admin only in code) -->
+    <Button
+        android:id="@+id/deleteCardButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Delete Card"
+        android:layout_marginTop="8dp" />
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

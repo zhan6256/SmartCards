@@ -33,6 +33,7 @@ public class FlashcardsActivity extends AppCompatActivity {
     private TextView cardTextView;
 
     private Button addCardButton;
+    private Button deleteCardButton;   // ✅ NEW
     private Button leftArrowButton;
     private Button rightArrowButton;
 
@@ -67,17 +68,19 @@ public class FlashcardsActivity extends AppCompatActivity {
         cardTextView = findViewById(R.id.cardTextView);
 
         addCardButton = findViewById(R.id.addCardButton);
+        deleteCardButton = findViewById(R.id.deleteCardButton); // ✅ NEW
         leftArrowButton = findViewById(R.id.leftArrowButton);
         rightArrowButton = findViewById(R.id.rightArrowButton);
 
         titleTextView.setText("Flashcards for: " + courseName);
 
-        // ADMIN-ONLY: hide ADD CARD button for non-admin users
+        // ADMIN-ONLY: hide ADD/DELETE buttons for non-admin users
         SharedPreferences prefs =
                 getSharedPreferences(MainActivity.SHARED_PREFERENCE_USERID_KEY, MODE_PRIVATE);
         boolean isAdmin = prefs.getBoolean("IS_ADMIN", false);
         if (!isAdmin) {
-            addCardButton.setVisibility(View.GONE); // invisible + no space
+            addCardButton.setVisibility(View.GONE);      // invisible + no space
+            deleteCardButton.setVisibility(View.GONE);   //  NEW
         }
 
         // Tap card to flip Q <-> A
@@ -113,6 +116,35 @@ public class FlashcardsActivity extends AppCompatActivity {
             }
             startActivity(AddFlashcardActivity.addFlashcardIntentFactory(this, courseId));
         });
+
+        // DELETE CARD (admin only - button hidden for non-admin)
+        deleteCardButton.setOnClickListener(v -> {
+            if (cards.isEmpty()) {
+                Toast.makeText(this, "No card to delete", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            Flashcard cardToDelete = cards.get(currentIndex);
+
+            new androidx.appcompat.app.AlertDialog.Builder(this)
+                    .setTitle("Delete Card")
+                    .setMessage("Delete this card?")
+                    .setPositiveButton("Delete", (dialog, which) -> {
+                        GymLogDatabase.databaseWriteExecutor.execute(() -> {
+                            GymLogDatabase db = GymLogDatabase.getDatabase(this);
+                            db.flashcardDAO().delete(cardToDelete);
+
+                            runOnUiThread(() -> {
+                                // keep index in range after delete
+                                if (currentIndex > 0) currentIndex--;
+                                loadFlashcards();
+                                Toast.makeText(this, "Card deleted", Toast.LENGTH_SHORT).show();
+                            });
+                        });
+                    })
+                    .setNegativeButton("Cancel", null)
+                    .show();
+        });
     }
 
     @Override
@@ -137,7 +169,11 @@ public class FlashcardsActivity extends AppCompatActivity {
                 cards.clear();
                 if (results != null) cards.addAll(results);
 
-                currentIndex = 0;
+                // If currentIndex is out of range after delete, fix it
+                if (currentIndex >= cards.size()) {
+                    currentIndex = Math.max(0, cards.size() - 1);
+                }
+
                 showingQuestion = true;
                 updateCardDisplay();
             });
