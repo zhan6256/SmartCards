@@ -20,6 +20,7 @@
         android:layout_marginTop="8dp"
         android:text="" />
 
+    <!-- VIEW MODE: show card here -->
     <TextView
         android:id="@+id/cardTextView"
         android:layout_width="match_parent"
@@ -30,6 +31,23 @@
         android:text="(Tap to flip)"
         android:textSize="22sp" />
 
+    <!-- EDIT MODE: show these fields (hidden until Edit is pressed) -->
+    <EditText
+        android:id="@+id/editQuestionEditText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Question"
+        android:visibility="gone"
+        android:layout_marginTop="8dp" />
+
+    <EditText
+        android:id="@+id/editAnswerEditText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Answer"
+        android:visibility="gone"
+        android:layout_marginTop="8dp" />
+
     <Button
         android:id="@+id/addCardButton"
         android:layout_width="match_parent"
@@ -37,13 +55,27 @@
         android:text="Add Card"
         android:layout_marginTop="8dp" />
 
-    <!-- Delete Card button (admin only in code) -->
+    <Button
+        android:id="@+id/editCardButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Edit Card"
+        android:layout_marginTop="8dp" />
+
     <Button
         android:id="@+id/deleteCardButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Delete Card"
         android:layout_marginTop="8dp" />
+
+    <Button
+        android:id="@+id/saveCardButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Save Card"
+        android:layout_marginTop="8dp"
+        android:visibility="gone" />
 
     <LinearLayout
         android:layout_width="match_parent"
