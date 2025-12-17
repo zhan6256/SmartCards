@@ -13,6 +13,12 @@ import com.daclink.mydemoapplication.Database.FlashcardDAO;
 import com.daclink.mydemoapplication.Database.GymLogDatabase;
 import com.daclink.mydemoapplication.Database.entities.Flashcard;
 
+/*
+ * Author: France Zhang
+ * Created on: 12/17/2025
+ * Description: AddFlashcardActivity class
+ */
+
 public class AddFlashcardActivity extends AppCompatActivity {
 
     private static final String EXTRA_COURSE_ID =

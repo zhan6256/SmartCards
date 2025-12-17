@@ -14,6 +14,12 @@ import com.daclink.mydemoapplication.Database.GymLogDatabase;
 import com.daclink.mydemoapplication.Database.UserDAO;
 import com.daclink.mydemoapplication.Database.entities.User;
 
+/*
+ * Author: France Zhang
+ * Created on: 12/17/2025
+ * Description: AddUserActivity class
+ */
+
 public class AddUserActivity extends AppCompatActivity {
 
     public static Intent addUserIntentFactory(Context context) {

@@ -7,6 +7,11 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 
+/*
+ * Author: France Zhang
+ * Created on: 12/17/2025
+ * Description: LocalDateTypeConverter class
+ */
 public class LocalDateTypeConverter {
     @TypeConverter
     public long convertDateToLong(LocalDateTime date){

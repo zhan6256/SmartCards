@@ -10,6 +10,11 @@ import com.daclink.mydemoapplication.Database.entities.Flashcard;
 
 import java.util.List;
 
+/*
+ * Author: France Zhang
+ * Created on: 12/17/2025
+ * Description: FlashcardDAO interface
+ */
 @Dao
 public interface FlashcardDAO {
 

@@ -19,6 +19,13 @@ import com.daclink.mydemoapplication.Database.entities.Flashcard;
 import java.util.ArrayList;
 import java.util.List;
 
+/*
+ * Author: France Zhang
+ * Created on: 12/17/2025
+ * Description: FlashcardsActivity class
+ */
+
+
 public class FlashcardsActivity extends AppCompatActivity {
 
     private static final String EXTRA_COURSE_ID =

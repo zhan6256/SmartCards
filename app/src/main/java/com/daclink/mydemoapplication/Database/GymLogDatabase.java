@@ -20,6 +20,11 @@ import com.daclink.mydemoapplication.MainActivity;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+/*
+ * Author: France Zhang
+ * Created on: 12/17/2025
+ * Description: GymLogDatabase class
+ */
 
 @TypeConverters(LocalDateTypeConverter.class)
 @Database(
@@ -29,7 +34,7 @@ import java.util.concurrent.Executors;
 )
 public abstract class GymLogDatabase extends RoomDatabase {
 
-    // ✅ KEEP THESE because your existing entities/DAOs reference them
+    // KEEP THESE because your existing entities/DAOs reference them
     public static final String USER_TABLE = "usertable";
     public static final String GYM_LOG_TABLE = "gymLogTable";
 
