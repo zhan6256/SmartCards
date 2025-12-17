@@ -48,6 +48,7 @@ public class DashboardActivity extends AppCompatActivity {
     private Button editCourseButton;
     private Button deleteCourseButton;
     private Button logoutButton;
+    private Button addCourseButton;
 
     private Course selectedCourse = null;
 
@@ -74,6 +75,8 @@ public class DashboardActivity extends AppCompatActivity {
         // Admin buttons (must exist in your XML)
         userListButton = findViewById(R.id.userListButton);
         addUserButton = findViewById(R.id.addUserButton);
+        addCourseButton = findViewById(R.id.addCourseButton);
+
 
         editCourseButton = findViewById(R.id.editCourseButton);
         deleteCourseButton = findViewById(R.id.deleteCourseButton);
@@ -99,6 +102,8 @@ public class DashboardActivity extends AppCompatActivity {
 
             userListButton.setEnabled(isAdmin);
             addUserButton.setEnabled(isAdmin);
+            addCourseButton.setEnabled(isAdmin);
+
 
             // refresh the 3-dots menu title
             invalidateOptionsMenu();
@@ -108,6 +113,8 @@ public class DashboardActivity extends AppCompatActivity {
         addUserButton.setOnClickListener(v ->
                 startActivity(AddUserActivity.addUserIntentFactory(this))
         );
+        addCourseButton.setOnClickListener(v -> showAddCourseDialog());
+
 
         userListButton.setOnClickListener(v ->
                 startActivity(UserListActivity.userListIntentFactory(this, loggedInUserId))
@@ -264,6 +271,43 @@ public class DashboardActivity extends AppCompatActivity {
                 .setNegativeButton("Cancel", null)
                 .show();
     }
+    private void showAddCourseDialog() {
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_edit_course, null);
+
+        TextView nameEditText = dialogView.findViewById(R.id.editCourseName);
+        TextView descEditText = dialogView.findViewById(R.id.editCourseDescription);
+
+        nameEditText.setText("");
+        descEditText.setText("");
+
+        new AlertDialog.Builder(this)
+                .setTitle("Add Course")
+                .setView(dialogView)
+                .setPositiveButton("Add", (dialog, which) -> {
+                    String name = nameEditText.getText().toString().trim();
+                    String desc = descEditText.getText().toString().trim();
+
+                    if (name.isEmpty()) {
+                        Toast.makeText(this, "Course name cannot be empty", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+
+                    GymLogDatabase.databaseWriteExecutor.execute(() -> {
+                        GymLogDatabase db = GymLogDatabase.getDatabase(this);
+                        CourseDAO dao = db.getCourseDAO();
+
+                        // matches your Course constructor
+                        Course newCourse = new Course(name, desc, loggedInUserId);
+                        dao.insert(newCourse);
+
+                        runOnUiThread(this::loadCourses);
+                    });
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
+    }
+
+
 
     // =========================================================
     // Delete course confirmation

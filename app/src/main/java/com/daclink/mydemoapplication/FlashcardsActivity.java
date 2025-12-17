@@ -2,7 +2,9 @@ package com.daclink.mydemoapplication;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -59,9 +61,6 @@ public class FlashcardsActivity extends AppCompatActivity {
         courseName = getIntent().getStringExtra(EXTRA_COURSE_NAME);
         if (courseName == null) courseName = "";
 
-        // Optional: quick debug toast (remove later)
-        // Toast.makeText(this, "Flashcards courseId=" + courseId, Toast.LENGTH_LONG).show();
-
         // These IDs MUST match your activity_flashcards.xml
         titleTextView = findViewById(R.id.flashcardsTitleTextView);
         positionTextView = findViewById(R.id.positionTextView);
@@ -72,6 +71,14 @@ public class FlashcardsActivity extends AppCompatActivity {
         rightArrowButton = findViewById(R.id.rightArrowButton);
 
         titleTextView.setText("Flashcards for: " + courseName);
+
+        // ADMIN-ONLY: hide ADD CARD button for non-admin users
+        SharedPreferences prefs =
+                getSharedPreferences(MainActivity.SHARED_PREFERENCE_USERID_KEY, MODE_PRIVATE);
+        boolean isAdmin = prefs.getBoolean("IS_ADMIN", false);
+        if (!isAdmin) {
+            addCardButton.setVisibility(View.GONE); // invisible + no space
+        }
 
         // Tap card to flip Q <-> A
         cardTextView.setOnClickListener(v -> {
@@ -96,7 +103,7 @@ public class FlashcardsActivity extends AppCompatActivity {
             updateCardDisplay();
         });
 
-        // Add card for this course
+        // Add card for this course (admin only - button hidden for non-admin)
         addCardButton.setOnClickListener(v -> {
             if (courseId == -1) {
                 Toast.makeText(this,
@@ -139,7 +146,7 @@ public class FlashcardsActivity extends AppCompatActivity {
 
     private void updateCardDisplay() {
         if (cards.isEmpty()) {
-            cardTextView.setText("No flashcards yet.\nTap Add Card to create one.");
+            cardTextView.setText("No flashcards yet.\n(Tap to flip) Use arrows to navigate.");
             positionTextView.setText("");
             leftArrowButton.setEnabled(false);
             rightArrowButton.setEnabled(false);

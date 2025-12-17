@@ -21,56 +21,74 @@ import com.daclink.mydemoapplication.databinding.ActivityLoginBinding;
  */
 
 public class LoginActivity extends AppCompatActivity {
+
     private ActivityLoginBinding binding;
-
     private GymLogRepository repository;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         binding = ActivityLoginBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
         repository = GymLogRepository.getRepository(getApplication());
 
         binding.loginButton.setOnClickListener(new View.OnClickListener() {
-
             @Override
             public void onClick(View v) {
                 verifyUser();
             }
         });
     }
-    private void verifyUser(){
+
+    private void verifyUser() {
         String username = binding.userNameLoginEditText.getText().toString();
 
-        if(username.isEmpty()){
+        if (username.isEmpty()) {
             toastMaker("username should not be blank");
             return;
         }
+
         LiveData<User> userObserver = repository.getUserByUserName(username);
-        userObserver.observe(this, user ->{
-            if(user != null){
+        userObserver.observe(this, user -> {
+            if (user != null) {
                 String password = binding.passwordLoginEditText.getText().toString();
-                if(password.equals(user.getPassword())){
-                    startActivity(DashboardActivity.dashboardIntentFactory(
-                            getApplicationContext(),
-                            user.getId()
-                    ));
+
+                if (password.equals(user.getPassword())) {
+
+                    // SAVE USER ID + ADMIN FLAG
+                    SharedPreferences prefs =
+                            getSharedPreferences(
+                                    MainActivity.SHARED_PREFERENCE_USERID_KEY,
+                                    MODE_PRIVATE
+                            );
+
+                    prefs.edit()
+                            .putInt(
+                                    MainActivity.SHARED_PREFERENCE_USERID_VALUE,
+                                    user.getId()
+                            )
+                            .putBoolean("IS_ADMIN", user.isAdmin())
+                            .apply();
+
+                    // Go to Dashboard
+                    startActivity(
+                            DashboardActivity.dashboardIntentFactory(
+                                    getApplicationContext(),
+                                    user.getId()
+                            )
+                    );
                     finish();
 
-                }else{
-                    toastMaker("Invalid password" +
-                            "");
+                } else {
+                    toastMaker("Invalid password");
                     binding.passwordLoginEditText.setSelection(0);
-
                 }
-            }else {
-                toastMaker (String.format("%s is not a valid username.", username));
+            } else {
+                toastMaker(String.format("%s is not a valid username.", username));
                 binding.userNameLoginEditText.setSelection(0);
             }
-
         });
     }
 
@@ -78,8 +96,7 @@ public class LoginActivity extends AppCompatActivity {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
     }
 
-    static Intent loginIntentFactory(Context context){
+    static Intent loginIntentFactory(Context context) {
         return new Intent(context, LoginActivity.class);
     }
-
 }
