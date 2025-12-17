@@ -3,6 +3,11 @@ package com.daclink.mydemoapplication.Database.entities;
 import androidx.room.Entity;
 import androidx.room.ForeignKey;
 import androidx.room.PrimaryKey;
+/*
+ * Author: France Zhang
+ * Created on: 12/17/2025
+ * Description: Course class
+ */
 
 @Entity(
         tableName = "course",

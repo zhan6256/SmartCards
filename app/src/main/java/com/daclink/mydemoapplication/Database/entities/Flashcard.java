@@ -4,6 +4,11 @@ import androidx.room.Entity;
 import androidx.room.ForeignKey;
 import androidx.room.Index;
 import androidx.room.PrimaryKey;
+/*
+ * Author: France Zhang
+ * Created on: 12/17/2025
+ * Description: Flashcard class
+ */
 
 @Entity(
         tableName = "flashcardTable",
