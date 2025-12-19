@@ -26,7 +26,8 @@ import java.util.List;
 
 /*
  * Author: France Zhang
- * Description: DashboardActivity
+ * Created on: 12/17/2025
+ * Description: DashboardActivity class
  */
 public class DashboardActivity extends AppCompatActivity {
 
@@ -38,7 +39,7 @@ public class DashboardActivity extends AppCompatActivity {
 
     private TextView usernameTextView;
     private TextView adminControlsLabelTextView;
-        private LinearLayout courseContainer;
+    private LinearLayout courseContainer;
     private LinearLayout adminControlsGroup;
 
     // Admin controls
@@ -59,6 +60,9 @@ public class DashboardActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_dashboard);
 
+        //  ADDED: ensure notification channel exists (Android 8+)
+        NotificationHelper.ensureChannel(this);
+
         // ----- Get logged-in user ID -----
         loggedInUserId = getIntent().getIntExtra(DASHBOARD_USER_ID, -1);
         if (loggedInUserId == -1) {
@@ -76,7 +80,6 @@ public class DashboardActivity extends AppCompatActivity {
         userListButton = findViewById(R.id.userListButton);
         addUserButton = findViewById(R.id.addUserButton);
         addCourseButton = findViewById(R.id.addCourseButton);
-
 
         editCourseButton = findViewById(R.id.editCourseButton);
         deleteCourseButton = findViewById(R.id.deleteCourseButton);
@@ -104,7 +107,6 @@ public class DashboardActivity extends AppCompatActivity {
             addUserButton.setEnabled(isAdmin);
             addCourseButton.setEnabled(isAdmin);
 
-
             // refresh the 3-dots menu title
             invalidateOptionsMenu();
         });
@@ -115,11 +117,9 @@ public class DashboardActivity extends AppCompatActivity {
         );
         addCourseButton.setOnClickListener(v -> showAddCourseDialog());
 
-
         userListButton.setOnClickListener(v ->
                 startActivity(UserListActivity.userListIntentFactory(this, loggedInUserId))
         );
-
 
         // ----- Load courses -----
         loadCourses();
@@ -130,6 +130,15 @@ public class DashboardActivity extends AppCompatActivity {
                 Toast.makeText(this, "Select a course first (long-press)", Toast.LENGTH_SHORT).show();
                 return;
             }
+
+            //  ADDED: system notification for rubric optional item
+            NotificationHelper.show(
+                    this,
+                    2001,
+                    "SmartCards Admin",
+                    "Editing course: " + selectedCourse.getCourseName()
+            );
+
             showEditCourseDialog(selectedCourse);
         });
 
@@ -139,12 +148,20 @@ public class DashboardActivity extends AppCompatActivity {
                 Toast.makeText(this, "Select a course first (long-press)", Toast.LENGTH_SHORT).show();
                 return;
             }
+
+            //  ADDED: system notification for rubric optional item
+            NotificationHelper.show(
+                    this,
+                    2002,
+                    "SmartCards Admin",
+                    "Deleting course: " + selectedCourse.getCourseName()
+            );
+
             confirmDeleteCourse(selectedCourse);
         });
 
         // ----- Logout Button (keep for now) -----
         logoutButton.setOnClickListener(v -> logout());
-
     }
 
     // =========================================================
@@ -271,6 +288,7 @@ public class DashboardActivity extends AppCompatActivity {
                 .setNegativeButton("Cancel", null)
                 .show();
     }
+
     private void showAddCourseDialog() {
         View dialogView = getLayoutInflater().inflate(R.layout.dialog_edit_course, null);
 
@@ -306,8 +324,6 @@ public class DashboardActivity extends AppCompatActivity {
                 .setNegativeButton("Cancel", null)
                 .show();
     }
-
-
 
     // =========================================================
     // Delete course confirmation
